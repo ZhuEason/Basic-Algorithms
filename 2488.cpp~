@@ -1,0 +1,189 @@
+/*************************************************************************
+	> File Name: 2488.cpp
+	> Author: zhuyisong
+	> Mail: zhuyisong1994@gmail.com
+	> Created Time: Fri 26 Dec 2014 15:03:21 HKT
+ ************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stack>
+
+using namespace std;
+
+#define MAX 27
+
+typedef struct location {
+	int x;
+	int y;
+	struct location* pre;
+} location;
+
+
+int count = 1;
+bool output = false;
+int test;
+
+
+int createGraph(int (*)[MAX]);
+void DFS(int (*)[MAX], location*, int);
+bool findPath(int, int(*)[MAX], location* , location*&);
+void display(location*);
+
+int main() {
+	int sumTest;
+	int graph[MAX][MAX];
+	int sum;	
+	location* firstLocation = (location*) malloc (sizeof (location));
+
+	scanf("%d", &sumTest);
+	test = 1;
+	while (test <= sumTest) {
+		count = 1;
+		output = false;
+
+		sum = createGraph(graph);
+
+		if (sum >= 26) {
+			printf("Scenario #%d:\n", test);
+			printf("impossible\n\n");
+			continue;
+		} else {
+
+			firstLocation->x = 1;
+			firstLocation->y = 1;
+			firstLocation->pre = NULL;
+
+			DFS(graph, firstLocation, sum);
+		}
+
+		test++;
+	}
+
+	return 0;
+}
+
+
+int createGraph(int (*graph)[MAX]) {
+	int row, coloum;
+
+//	memset(graph, 1, sizeof (int) * MAX * MAX);	
+	for (int i = 0; i < MAX; i++) {
+		for (int j = 0; j < MAX; j++) {
+			graph[i][j] = 1;
+		}
+	}
+	scanf ("%d %d", &row, &coloum);
+
+	for (int i = 1; i <= row; i++) {
+		for (int j = 1; j <= coloum; j++) {
+			graph[i][j] = 0;
+		}
+	}
+
+	graph[1][1] = 1;
+
+
+	return (row * coloum);
+}
+
+
+void DFS (int (*graph)[MAX], location* currentLocation, int sum) {
+
+	location* nextLocation = NULL;
+
+	if (count == sum && !output) {
+		output = true;
+		display(currentLocation);
+	} else {
+		for (int i = 0; i < 8; i++) {
+			if (findPath(i, graph, currentLocation, nextLocation)) {
+				count++;
+				DFS(graph, nextLocation, sum);
+				graph[nextLocation->y][nextLocation->x] = 0;
+			}
+		}
+
+		count--;
+		if (count == 0) {
+			printf("Scenario #%d:\n", test);
+			printf("impossible\n\n");
+		}
+	}
+}
+
+bool findPath(int choice, int (*graph)[MAX], location* currentLocation, location* &nextLocation) {
+	int x = currentLocation->x;
+	int y = currentLocation->y;
+
+	switch (choice) {
+		case 0:
+			x -= 2;
+			y -= 1;
+			break;
+		case 1:
+			x -= 2;
+			y += 1;
+			break;
+		case 2:
+			x -= 1;
+			y -= 2;
+			break;
+		case 3:
+			x -= 1;
+			y += 2;
+			break;
+		case 4: 
+			x += 1;
+			y -= 2;
+			break;
+		case 5: 
+			x += 1;
+			y += 2;
+			break;
+		case 6:
+			x += 2;
+			y -= 1;
+			break;
+		case 7:
+			x += 2;
+			y += 1;
+			break;
+		default:
+			break;
+	}
+
+	if (x > 0 && y > 0 && graph[y][x] == 0) {
+		graph[y][x] = 1;
+
+		nextLocation = (location*) malloc (sizeof (location)); 
+		
+		nextLocation->x = x;
+		nextLocation->y = y;
+		nextLocation->pre = currentLocation;
+
+		return true;
+
+	} 
+
+	return false;
+}
+
+void display (location* currentLocation) {
+	stack<location*> s;
+
+	while (currentLocation != NULL) {
+		s.push(currentLocation);
+		currentLocation = currentLocation->pre;
+	}
+
+	printf("Scenario #%d:\n", test);
+	while (!s.empty()) {
+		printf("%c%d", (s.top())->x+'A'-1, (s.top())->y);
+		s.pop();
+	}
+	
+	printf("\n\n");
+}
+

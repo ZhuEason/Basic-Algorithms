@@ -1,0 +1,61 @@
+/*************************************************************************
+	> File Name: Dijkstra.c
+	> Author: zhuyisong
+	> Mail: zhuyisong1994@gmail.com
+	> Created Time: Wed 07 Jan 2015 20:16:25 HKT
+ ************************************************************************/
+
+#include <stdio.h>
+#include <stdilib.h>
+#include <string.h>
+
+#define MAX 6
+#define MAXNUM -1
+
+int edge[MAX][MAX];
+int pre[MAX];
+
+void enterEdge(int, int, int);
+void initial();
+void display();
+
+
+int main() {
+
+	int i = 0; 
+	int j = 0; 
+	int length = 0;
+
+	initial();
+
+	printf ("please input the edge:\n");
+	while (scanf ("%d %d %d", &i, &j, &length) != EOF) {
+		printf ("please input the edge:\n");
+		enterEdge(i, j, length);
+	}
+
+	
+}
+
+void initial() {
+	for (int i = 0; i < MAX; i++) {
+		for (int j = 0; j < MAX; j++) {
+			pre[j] = -1;
+			edge[i][j] = -1;
+		}
+	}
+}
+
+void enterEdge (int i, int j, int length) {
+	edge[i][j] = length;
+}
+
+
+void display() {
+	for (int i = 0; i < MAX; i++) {
+		for (int j = 0; j < MAX; j++) {
+			printf ("%d ", edge[i][j]);
+		}
+		printf ("\n");
+	}
+}
