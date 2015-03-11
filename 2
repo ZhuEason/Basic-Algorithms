@@ -1,61 +1,154 @@
 /*************************************************************************
-	> File Name: Dijkstra.c
+	> File Name: 3083.cpp
 	> Author: zhuyisong
 	> Mail: zhuyisong1994@gmail.com
-	> Created Time: Wed 07 Jan 2015 20:16:25 HKT
+	> Created Time: Sat 27 Dec 2014 20:01:31 HKT
  ************************************************************************/
 
 #include <stdio.h>
-#include <stdilib.h>
+#include <stdlib.h>
 #include <string.h>
+#include <queue>
 
-#define MAX 6
-#define MAXNUM -1
+using namespace std;
 
-int edge[MAX][MAX];
-int pre[MAX];
+#define MAX 41
 
-void enterEdge(int, int, int);
-void initial();
-void display();
+typedef struct graph {
+	int x;
+	int y;
+	struct graph* pre;
+} location;
+
+char graph[MAX][MAX];
+int test;
+bool success = false;
+
+
+int createGraph(int row, int coloum, location* firstLocation); 
+void DFS_LF (location* currentLocation, int &direction); 
+bool findPath(location* currentLocation, location*& nextLocation, int& direction, int priority); 
+void display (location* lastLocation); 
 
 
 int main() {
+	scanf("%d", &test);
+	int row, coloum;
+	int direction;
+	location* firstLocation = (location*) malloc (sizeof (location));
 
-	int i = 0; 
-	int j = 0; 
-	int length = 0;
+	while (test--) {
+		scanf("%d %d", &coloum, &row);
+		direction = createGraph(row, coloum, firstLocation);
 
-	initial();
+		DFS_LF (firstLocation, direction);
+	}
+}
 
-	printf ("please input the edge:\n");
-	while (scanf ("%d %d %d", &i, &j, &length) != EOF) {
-		printf ("please input the edge:\n");
-		enterEdge(i, j, length);
+int createGraph(int row, int coloum, location* firstLocation) {
+
+	int direction;
+
+	for (int i = 0; i < MAX; i++) {
+		for (int j = 0; j < MAX; j++) {
+			graph[i][j] = '#';
+		}
 	}
 
+	for (int i = 1; i <= row; i++) {
+		for (int j = 1; j <= coloum; j++) {
+			scanf(" %c", &graph[i][j]);			
+			if (graph[i][j] == 'S') {
+				firstLocation->x = j;
+				firstLocation->y = i;
+				firstLocation->pre = NULL;
+				if (i == row) {
+					direction = 0;
+				} else if (i == 1) {
+					direction = 2;
+				} else if (j == 1) {
+					direction = 1;
+				} else if (j == coloum) {
+					direction = 3;
+				}
+			}
+		}
+	}
+
+	return direction;
+}
+
+void DFS_LF (location* currentLocation, int &direction) {
 	
-}
+	location* nextLocation = NULL;
 
-void initial() {
-	for (int i = 0; i < MAX; i++) {
-		for (int j = 0; j < MAX; j++) {
-			pre[j] = -1;
-			edge[i][j] = -1;
+	for (int i = 0; i < 4; i++) {
+		if (findPath(currentLocation, nextLocation, direction, 3)) {
+			DFS_LF (nextLocation, direction);
+			if (success) {
+				return;
+			}
+			i = 0;
 		}
 	}
+
+	if (success) {
+		display(nextLocation);
+		return;
+	}
+
+	direction = (direction+2) % 4;
+	free(currentLocation);
 }
 
-void enterEdge (int i, int j, int length) {
-	edge[i][j] = length;
+bool findPath(location* currentLocation, location*& nextLocation, int& direction, int priority) {
+	direction = (direction + priority) % 4;
+	int tempX = currentLocation->x;
+	int tempY = currentLocation->y;
+
+	switch (choice) {
+		case 0:
+			tempY--;
+			break;
+		case 1:
+			tempX++;
+			break;
+		case 2:
+			tempY++;
+			break;
+		case 3:
+			tempX--;
+			break;
+		default:
+			break;
+	}
+
+	if (graph[tempY][tempX] == '.') {
+		nextLocation = (location*) malloc (sizeof (location));
+		nextLocation->x = tempX;
+		nextLocation->y = tempY;
+		nextLocation->pre = currentLocation;
+		
+		graph[tempY][tempX] = '#';
+
+		return true;
+	} else if (graph[tempY][tempX] == 'E') {
+		nextLocation = (location*) malloc (sizeof (location));
+		nextLocation->x = tempX;
+		nextLocation->y = tempY;
+		nextLocation->pre = currentLocation;
+
+		success = true;
+
+		graph[tempY][tempX] = '#';
+	}
+
+	return false;
 }
 
-
-void display() {
-	for (int i = 0; i < MAX; i++) {
-		for (int j = 0; j < MAX; j++) {
-			printf ("%d ", edge[i][j]);
-		}
-		printf ("\n");
+void display (location* lastLocation) {
+	while (lastLocation != NULL) {
+		printf("(%d, %d)", lastLocation->x, lastLocation->y);
+		lastLocation = lastLocation->pre;
 	}
 }

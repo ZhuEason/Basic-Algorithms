@@ -2,185 +2,155 @@
 	> File Name: 3083.cpp
 	> Author: zhuyisong
 	> Mail: zhuyisong1994@gmail.com
-	> Created Time: Thu 25 Dec 2014 12:59:36 HKT
+	> Created Time: Sat 27 Dec 2014 20:01:31 HKT
  ************************************************************************/
 
 #include <stdio.h>
-#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include <queue>
 
-#define MAX 41
-
 using namespace std;
 
-//record the location of the traveler.
-typedef struct node {
+#define MAX 41
+
+typedef struct graph {
 	int x;
 	int y;
-	struct node* pre; // point to the pre location
-}location;
+	struct graph* pre;
+} location;
 
-void BFS (char(*)[MAX], queue<location*> &q, location* lastLocation );
-void DFS_LF (char(*)[MAX], stack<location*> &q, location* lastLocation, int&);
-bool findPath(char(*)[MAX], location* &q, int& );
-void display(location*);
+char graph[MAX][MAX];
+int test;
+bool success;
+int count;
+
+int createGraph(int row, int coloum, location* firstLocation); 
+void DFS_LF (location* currentLocation, int &direction); 
+bool findPath(location* currentLocation, location*& nextLocation, int direction, int priority); 
+void display (location* lastLocation); 
 
 int main() {
-	
-	char maze[MAX][MAX];
-	int test;
-	int row, coloum;
-
 	scanf("%d", &test);
+	int row, coloum;
+	int direction;
+
+	location* firstLocation = (location*) malloc (sizeof (location));
 
 	while (test--) {
-		
-		location *firstLocation = NULL;
-		location *lastLocation = NULL;
-		queue<location*> q;		
-		stack<location*> s;
+		success = false;
+		count = 0;
 
-		memset(maze, '#', sizeof(char) * 41 * 41);
-		int i, j;
-		int direction;
+		scanf("%d %d", &coloum, &row);
+		direction = createGraph(row, coloum, firstLocation);
 
-		scanf("%d %d", &coloum, &row);	
-		for (i = 1; i <= row; i++) {
-			for (j = 1; j <= coloum; j++) {
-				scanf(" %c", &maze[i][j]);
-				if (maze[i][j] == 'S') {
-					firstLocation = (location*) malloc (sizeof(location));
-					firstLocation->x = j;
-					firstLocation->y = i;
-					firstLocation->pre = NULL;
-				} else if (maze[i][j] == 'E') {
-					lastLocation = (location*) malloc (sizeof(location));
-					lastLocation->x = j;
-					lastLocation->y = i;
-					firstLocation->pre = NULL;
-				}
-			}
-		}
-		
-		q.push(firstLocation);
-		s.push(firstLocation);
+		DFS_LF (firstLocation, direction);
 
-		if (firstLocation->x == 1) {
-			direction = 1;
-		} else if (firstLocation->x == coloum) {
-			direction = 3;
-		} else if (firstLocation->y == 1) {
-			direction = 2;
-		} else if (firstLocation->y == row) {
-			direction = 0;
-		}
-		DFS_LF (maze, s, lastLocation, direction);
-
-		//BFS(maze, q, lastLocation);
-
-
+//		DFS_RF (firstLocation, direction);
 	}
 
 	return 0;
 }
 
-void BFS(char (*maze)[MAX] , queue<location*> &q, location* lastLocation ) {
+int createGraph(int row, int coloum, location* firstLocation) {
 
-	 int i;
-	 location* currentLocation = NULL;
+	int direction;
 
-	 if (!q.empty()) {
-		currentLocation = q.front();
-		for (i = 0; i < 4; i++) {
-			if (findPath(maze, currentLocation, i) == false) {
-				continue;
-			} else {
-				q.push(currentLocation);
-			}
+	for (int i = 0; i < MAX; i++) {
+		for (int j = 0; j < MAX; j++) {
+			graph[i][j] = '#';
 		}
-		if (currentLocation->x == lastLocation->x && currentLocation->y == lastLocation->y) {
-			while ( !q.empty() ) {
-				q.pop();
-			}
-			return ;
-		}
-		q.pop();
-		BFS(maze, q, lastLocation);
-	 }
-}
-
-void DFS_LF (char(*maze)[MAX], stack<location*> &s, location* lastLocation, int& direction) {
-	int i;
-
-	location* currentLocation = NULL;
-	
-	if (!s.empty()) {
-		currentLocation = s.top();	
-		for (i = 0; i < 4; i++) {
-			if (findPath(maze, currentLocation, direction)) {
-				s.push(currentLocation);
-				if (currentLocation->x == lastLocation->x && currentLocation->y == lastLocation->y) {
-					display(currentLocation);
-					while (!s.empty()) {
-						s.pop();
-					}
-				}
-				DFS_LF(maze, s, lastLocation, direction);
-			}
-		}
-		s.pop();
 	}
+
+	for (int i = 1; i <= row; i++) {
+		for (int j = 1; j <= coloum; j++) {
+			scanf(" %c", &graph[i][j]);			
+			if (graph[i][j] == 'S') {
+				firstLocation->x = j;
+				firstLocation->y = i;
+				firstLocation->pre = NULL;
+				if (i == row) {
+					direction = 0;
+				} else if (i == 1) {
+					direction = 2;
+				} else if (j == 1) {
+					direction = 1;
+				} else if (j == coloum) {
+					direction = 3;
+				}
+			}
+		}
+	}
+
+	return direction;
 }
 
-
-bool findPath(char(*maze)[MAX] , location* &firstLocation, int& direction) {
+void DFS_LF (location* currentLocation, int &direction) {
 	
-	int tempX = firstLocation->x;
-	int tempY = firstLocation->y;
+	location* nextLocation = NULL;
+	count++;
 
-	switch( (direction+3) % 4 ) {
+	for (int i = 0; i < 4; i++) {
+		if (findPath(currentLocation, nextLocation, direction+i, 3)) {
+			direction = (direction+i+3) % 4;
+			DFS_LF (nextLocation, direction);
+			if (success) {
+				return;
+			}
+			i = -1;
+		}
+	}
+
+	if (success) {
+		printf("%d\n", count);
+		return;
+	}
+	
+	count++;
+	direction = (direction+2) % 4;
+	free(currentLocation);
+}
+
+bool findPath(location* currentLocation, location*& nextLocation, int direction, int priority) {
+	int choice = (direction + priority) % 4;
+	int tempX = currentLocation->x;
+	int tempY = currentLocation->y;
+
+	switch (choice) {
 		case 0:
-			tempY--; 
-			direction = 0;
+			tempY--;
 			break;
 		case 1:
 			tempX++;
-			direction = 1;
 			break;
 		case 2:
 			tempY++;
-			direction = 2;
 			break;
 		case 3:
 			tempX--;
-			direction = 3;
 			break;
 		default:
 			break;
-	} 
+	}
 
-	if (maze[tempY][tempX] == '.'){
-		location* currentLocation = (location*) malloc (sizeof (location));
-		currentLocation->x = tempX;
-		currentLocation->y = tempY;
-		currentLocation->pre = firstLocation;
+	if (graph[tempY][tempX] == '.') {
+		nextLocation = (location*) malloc (sizeof (location));
+		nextLocation->x = tempX;
+		nextLocation->y = tempY;
+		nextLocation->pre = currentLocation;
 		
-		firstLocation = currentLocation;
-		maze[tempY][tempX] = '#';
+		graph[tempY][tempX] = '#';
 
 		return true;
-	} 
-	if (maze[tempY][tempX] == 'E') {
-		location* currentLocation = (location*) malloc (sizeof (location));
-		currentLocation->x = tempX;
-		currentLocation->y = tempY;
-		currentLocation->pre = firstLocation;
+	} else if (graph[tempY][tempX] == 'E') {
+		nextLocation = (location*) malloc (sizeof (location));
+		nextLocation->x = tempX;
+		nextLocation->y = tempY;
+		nextLocation->pre = currentLocation;
 
-		firstLocation = currentLocation;
+		success = true;
 
-		display (currentLocation);
+		graph[tempY][tempX] = '#';
 
 		return true;
 	}
@@ -189,13 +159,8 @@ bool findPath(char(*maze)[MAX] , location* &firstLocation, int& direction) {
 }
 
 void display (location* lastLocation) {
-	 printf("(%d, %d)", lastLocation->y, lastLocation->x);
-	 lastLocation = lastLocation->pre;
-	 
-	 while (lastLocation != NULL) {
-		 printf("---->(%d, %d)", lastLocation->y, lastLocation->x);
-		 lastLocation = lastLocation->pre;			
-	 }
-
-	 printf("\n");
+	while (lastLocation != NULL) {
+		printf("(%d, %d)", lastLocation->x, lastLocation->y);
+		lastLocation = lastLocation->pre;
+	}
 }
